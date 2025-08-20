@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Лайфхак ×11 — интерактив</title>
+  <!-- Красивые округлые шрифты -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Nunito+Sans:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --pink:#e85b9c;           /* основной розовый */
+      --pink-2:#ff6aa9;         /* акцентный градиент */
+      --ink:#b12f6b;            /* тёмный розово-сливовый */
+      --soft:#fff7fb;           /* мягкая подложка */
+      --line:#ffd6ea;           /* рамка */
+      --shadow: 0 24px 60px rgba(232,91,156,.18);
+    }
+    html,body{height:100%;margin:0;background:#fff;color:var(--ink);}
+    body{display:grid; place-items:center; font-family:"Nunito Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;}
+
+    /* Декоративный фон: лёгкий узор точек и пастельные пятна */
+    body::before, body::after{
+      content:""; position:fixed; inset:auto auto -120px -120px; width:420px; height:420px; border-radius:50%; background:radial-gradient(closest-side, rgba(232,91,156,.18), transparent 70%); filter:blur(10px); z-index:-2;
+    }
+    body::after{ inset:-140px -140px auto auto; background:radial-gradient(closest-side, rgba(255,106,169,.16), transparent 70%);}
+    .dots{
+      position:fixed; inset:0; background-image:radial-gradient(rgba(232,91,156,.06) 1px, transparent 1px);
+      background-size:22px 22px; z-index:-3;
+    }
+
+    /* Карточка Pinterest 1000×1500 */
+    .card{width:1000px; height:1500px; background:#fff; border:3px solid var(--line); border-radius:36px; box-shadow:var(--shadow); padding:64px; box-sizing:border-box; display:flex; flex-direction:column; gap:28px; overflow:hidden;}
+
+    header{display:grid; gap:14px;}
+    .badge{justify-self:start; padding:10px 16px; border-radius:999px; background:linear-gradient(135deg,var(--soft),#fff); border:2px solid var(--line); color:var(--pink); font-weight:900; letter-spacing:.3px; text-transform:uppercase; font-size:16px;}
+    h1{margin:0; font: 700 clamp(40px, 5.5vw, 72px)/1 "Fredoka", system-ui; color:var(--ink); letter-spacing:.3px;}
+    .subtitle{margin-top:-6px; color:var(--pink); font-weight:700;}
+
+    .panel{display:grid; grid-template-columns: 1.1fr .9fr; gap:24px; align-items:start;}
+
+    .controls{background:var(--soft); padding:22px 20px; border-radius:22px; border:2px solid var(--line); display:grid; gap:12px;}
+    label{font-weight:800; color:var(--ink);}    
+    .field{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
+    input[type="number"]{appearance:textfield; width:140px; font-size:34px; padding:12px 14px; border-radius:16px; border:2px solid var(--line); outline:none; color:var(--ink); background:#fff; font-weight:900; text-align:center;}
+    input[type="number"]:focus{border-color:var(--pink); box-shadow:0 0 0 8px rgba(232,91,156,.12);}    
+
+    .chips{display:flex; gap:10px; flex-wrap:wrap; margin-top:2px;}
+    .chip{cursor:pointer; user-select:none; padding:10px 14px; border-radius:12px; border:2px solid var(--line); color:var(--pink); font-weight:900; background:#fff; transition:.15s ease;}
+    .chip:hover{transform:translateY(-2px); box-shadow:0 6px 18px rgba(232,91,156,.17);}    
+
+    .equation{margin-top:8px; font: 900 clamp(34px, 4vw, 56px)/1.1 "Nunito Sans"; color:var(--ink);} 
+
+    .steps{display:grid; gap:14px; padding:18px; border-radius:20px; background:linear-gradient(180deg, var(--soft), #fff); border:2px dashed var(--line);} 
+    .step{font-size:26px;}
+    .digits{font-weight:900; color:var(--ink);} 
+    .carry{color:var(--pink); font-weight:900;}
+
+    .big-result{margin-top:10px; font:900 clamp(64px, 8vw, 110px)/1 "Fredoka"; color:var(--ink); letter-spacing:2px;}
+    .big-result .piece{display:inline-block; transition:transform .18s ease, color .18s ease, text-shadow .18s ease; text-shadow:0 6px 0 rgba(232,91,156,.08);} 
+    .pop{transform:scale(1.12); color:var(--pink); text-shadow:0 10px 22px rgba(232,91,156,.25);}    
+
+    .note{margin-top:4px; font-size:22px; color:var(--pink);}    
+
+    /* Иллюстрация-калькулятор (SVG) */
+    .calc{align-self:stretch; display:grid; place-items:center;}
+    .calc svg{width:86%; max-width:420px; filter:drop-shadow(0 16px 34px rgba(232,91,156,.18));}
+
+    footer{margin-top:auto; display:flex; justify-content:center; font-weight:800; color:var(--pink);}
+
+    /* Масштаб предпросмотра */
+    @media (max-width: 1100px){
+      .card{transform:scale(.6); transform-origin:top center;}
+    }
+  </style>
+</head>
+<body>
+<div class="dots" aria-hidden="true"></div>
+
+<div class="card" role="application" aria-label="Интерактивная карточка: умножение на 11">
+  <header>
+    <span class="badge">🔥 Лайфхак</span>
+    <h1>Умножение на 11</h1>
+    <div class="subtitle">Игровой способ для <b>двузначных</b> чисел</div>
+  </header>
+
+  <section class="panel">
+    <!-- Левый столбец: управление + шаги -->
+    <div>
+      <div class="controls">
+        <label for="n">Двузначное число</label>
+        <div class="field">
+          <input id="n" type="number" min="10" max="99" value="34" aria-describedby="hint" />
+          <span id="hint" class="note">Введите значение от 10 до 99</span>
+        </div>
+        <div class="chips" aria-label="Быстрый выбор примера">
+          <span class="chip" data-n="34">34</span>
+          <span class="chip" data-n="67">67</span>
+          <span class="chip" data-n="99">99</span>
+        </div>
+      </div>
+
+      <div class="equation"><span id="eqN" class="digits">34</span> × 11 = <span id="eqAns" class="digits">374</span></div>
+
+      <div class="steps" aria-live="polite">
+        <div class="step">1) Берём цифры: <span class="digits" id="a">3</span> и <span class="digits" id="b">4</span></div>
+        <div class="step">2) Складываем: <span class="digits" id="a2">3</span> + <span class="digits" id="b2">4</span> = <span class="digits" id="sum">7</span></div>
+        <div class="step">3) Вставляем сумму посередине<span id="carryWrap" style="display:none">, переносим десяток <span class="carry">+<span id="carry">1</span></span> к левой цифре</span>.</div>
+        <div class="big-result" aria-label="Результат по шагам">
+          <span id="left" class="piece">3</span><span id="mid" class="piece">7</span><span id="right" class="piece">4</span>
+        </div>
+      </div>
+      <div class="note">✨ Лайфхак работает только для двузначных чисел.</div>
+    </div>
+
+    <!-- Правый столбец: декоративный калькулятор -->
+    <div class="calc" aria-hidden="true">
+      <svg viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg" role="img">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffd6ea"/>
+            <stop offset="100%" stop-color="#fff"/>
+          </linearGradient>
+        </defs>
+        <rect x="20" y="20" rx="40" ry="40" width="360" height="480" fill="url(#g)" stroke="#ffc2dd" stroke-width="6"/>
+        <rect x="60" y="50" rx="14" width="280" height="80" fill="#fff" stroke="#ffc2dd" stroke-width="6"/>
+        <text x="200" y="105" text-anchor="middle" font-family="Fredoka" font-size="58" fill="#e85b9c" font-weight="700">×11</text>
+        <!-- Кнопки -->
+        <g fill="#fff">
+          <rect x="60" y="160" width="80" height="80" rx="16" stroke="#ffc2dd" stroke-width="6"/>
+          <rect x="160" y="160" width="80" height="80" rx="16" stroke="#ffc2dd" stroke-width="6"/>
+          <rect x="260" y="160" width="80" height="80" rx="16" stroke="#ffc2dd" stroke-width="6"/>
+          <rect x="60" y="260" width="80" height="80" rx="16" stroke="#ffc2dd" stroke-width="6"/>
+          <rect x="160" y="260" width="80" height="80" rx="16" stroke="#ffc2dd" stroke-width="6"/>
+          <rect x="260" y="260" width="80" height="80" rx="16" stroke="#ffc2dd" stroke-width="6"/>
+          <rect x="60" y="360" width="80" height="80" rx="16" stroke="#ffc2dd" stroke-width="6"/>
+          <rect x="160" y="360" width="80" height="80" rx="16" stroke="#ffc2dd" stroke-width="6"/>
+          <rect x="260" y="360" width="80" height="80" rx="16" stroke="#ffc2dd" stroke-width="6"/>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <footer>тгк: @lera_easy_math</footer>
+</div>
+
+<script>
+  const input = document.getElementById('n');
+  const chips = document.querySelectorAll('.chip');
+  const el = {
+    eqN: document.getElementById('eqN'),
+    eqAns: document.getElementById('eqAns'),
+    a: document.getElementById('a'),
+    b: document.getElementById('b'),
+    a2: document.getElementById('a2'),
+    b2: document.getElementById('b2'),
+    sum: document.getElementById('sum'),
+    carry: document.getElementById('carry'),
+    carryWrap: document.getElementById('carryWrap'),
+    left: document.getElementById('left'),
+    mid: document.getElementById('mid'),
+    right: document.getElementById('right'),
+  };
+
+  function clampTwoDigit(v){
+    v = parseInt(v,10);
+    if (Number.isNaN(v)) return 34;
+    return Math.min(99, Math.max(10, v));
+  }
+
+  function popOnce(node){
+    node.classList.remove('pop');
+    void node.offsetWidth; // restart animation
+    node.classList.add('pop');
+    setTimeout(()=>node.classList.remove('pop'), 240);
+  }
+
+  function update(){
+    const n = clampTwoDigit(input.value);
+    input.value = n; // clamp visually
+    const a = Math.floor(n / 10);
+    const b = n % 10;
+    const s = a + b;
+    const carry = Math.floor(s / 10);
+    const mid = s % 10;
+    const left = a + carry;
+    const right = b;
+
+    const result = String(left) + String(mid) + String(right);
+
+    el.eqN.textContent = n;
+    el.eqAns.textContent = result;
+
+    [el.a, el.a2].forEach(node=>node.textContent = a);
+    [el.b, el.b2].forEach(node=>node.textContent = b);
+    el.sum.textContent = s;
+
+    if (carry > 0){
+      el.carryWrap.style.display = 'inline';
+      el.carry.textContent = carry;
+    } else {
+      el.carryWrap.style.display = 'none';
+    }
+
+    const pieces = [el.left, el.mid, el.right];
+    const values  = [left, mid, right];
+    pieces.forEach((p,i)=>{ p.textContent = values[i]; popOnce(p); });
+  }
+
+  input.addEventListener('input', update);
+  chips.forEach(ch => ch.addEventListener('click', () => { input.value = ch.dataset.n; update(); }));
+  update();
+</script>
+</body>
+</html>
